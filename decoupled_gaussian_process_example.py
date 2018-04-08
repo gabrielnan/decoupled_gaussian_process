@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Example for using decoupled Gaussian process model.
+"""Example for using decoupled Gaussian process model.
 
 A simple example of using the decoupled Gaussian process model. It supports
 embedding the logic of adding bases online and initialization of hyperparameters
@@ -38,6 +38,7 @@ from decoupled_gaussian_process.utils import numpy_data_interface
 from decoupled_gaussian_process.utils import performance_logger
 import numpy as np
 import tensorflow as tf
+from sklearn.datasets import load_boston
 
 tf.flags.DEFINE_string(
     'dataset_path',
@@ -257,20 +258,29 @@ def main(unused_args):
   # Load data from file.
   seed = 11
   rng = np.random.RandomState(seed)
-  np_data = np.load(FLAGS.dataset_path)
+  # np_data = np.load(FLAGS.dataset_path)
 
   # Random sample the test data points, because without the mechanism for
   # feeding small batches of test data, we can run out of memory when we use the
   # ARD_GSE kernel. It's better to feed in minibatches when testing.
-  if FLAGS.num_test_data_points > 0:
-    idx_test_data_points = rng.randint(0, len(np_data['y_test']),
-                                       FLAGS.num_test_data_points)
-  else:
-    idx_test_data_points = np.arange(len(np_data['y_test']))
-  x_training = np_data['x_training']
-  y_training = np_data['y_training'][:, [FLAGS.y_index]]
-  x_test = np_data['x_test'][idx_test_data_points]
-  y_test = np_data['y_test'][idx_test_data_points][:, [FLAGS.y_index]]
+  # if FLAGS.num_test_data_points > 0:
+  #   idx_test_data_points = rng.randint(0, len(np_data['y_test']),
+  #                                      FLAGS.num_test_data_points)
+  # else:
+  #   idx_test_data_points = np.arange(len(np_data['y_test']))
+  # x_training = np_data['x_training']
+  # y_training = np_data['y_training'][:, [FLAGS.y_index]]
+  # x_test = np_data['x_test'][idx_test_data_points]
+  # y_test = np_data['y_test'][idx_test_data_points][:, [FLAGS.y_index]]
+
+  boston = load_boston()
+  n = boston.data.shape[0]
+  train_part = int(n * 0.7)
+  x_training = boston.data[:train_part]
+  y_training = boston.target[:train_part].reshape(-1, 1)
+  x_test = boston.data[train_part:]
+  y_test = boston.target[train_part:].reshape(-1, 1)
+
   data = numpy_data_interface.Dataset(
       training=numpy_data_interface.DataPoints(x=x_training, y=y_training),
       test=numpy_data_interface.DataPoints(x=x_test, y=y_test))
