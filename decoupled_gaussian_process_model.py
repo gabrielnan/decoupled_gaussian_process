@@ -59,7 +59,7 @@ def model_fn(features, labels, mode, params):
       y_variance *= (
           params.num_test_data_points / (params.num_test_data_points - 1))
       metrics['normalized_mean_squared_error'] = (
-          mean_squared_error / y_variance, update_ops)
+        mean_squared_error / y_variance, update_ops)
       # TODO(xinyanyan) Note that this is an approximation due to the possible
       # sampling in build_kl_divergence(). Provide a non-sampling version
       # without backprop.
@@ -67,20 +67,20 @@ def model_fn(features, labels, mode, params):
           -model.build_kl_divergence() +
           model.build_expected_log_likelihood(mean, variance, y))
       metrics['evidence_lower_bound'] = tf.metrics.mean(
-          tf.ones(
-              (tf.shape(x)[0], 1), dtype=utils.tf_float) * evidence_lower_bound)
+        tf.ones(
+          (tf.shape(x)[0], 1), dtype=utils.tf_float) * evidence_lower_bound)
       return tf.estimator.EstimatorSpec(
-          mode=mode, loss=mean_squared_error, eval_metric_ops=metrics)
+        mode=mode, loss=mean_squared_error, eval_metric_ops=metrics)
 
   # Train.
   if mode == tf.estimator.ModeKeys.TRAIN:
     global_step = tf.train.get_or_create_global_step()
     r1 = params.learning_rate if params.learning_rate_with_decay else 0.0
     learning_rate = utils.build_learning_rate_with_decay(
-        params.learning_rate, r1, global_step)
+      params.learning_rate, r1, global_step)
     model.build_conditional_hyperparameter_initialization_and_bases_adding(
-        global_step, x, y, params.bases_adding_freq, params.num_bases_to_add,
-        params.percentile, params.num_bases_to_add, x)
+      global_step, x, y, params.bases_adding_freq, params.num_bases_to_add,
+      params.percentile, params.num_bases_to_add, x)
     # Add summaries.
     model.bases.build_summaries()
     tf.summary.scalar('learning_rate', learning_rate)
@@ -91,9 +91,9 @@ def model_fn(features, labels, mode, params):
     objective = tf.negative(evidence_lower_bound)
     tf.summary.scalar('objective', objective)
     train_step = (
-        tf.train.AdamOptimizer(learning_rate).minimize(
-            objective, global_step=global_step))
+      tf.train.AdamOptimizer(learning_rate).minimize(
+        objective, global_step=global_step))
     return tf.estimator.EstimatorSpec(
-        mode=mode,
-        loss=tf.reduce_mean(tf.square(mean - y)),
-        train_op=train_step)
+      mode=mode,
+      loss=tf.reduce_mean(tf.square(mean - y)),
+      train_op=train_step)
